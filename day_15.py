@@ -2,7 +2,7 @@ import time
 import tkinter as tk
 
 # file i/o
-def get_data(file_name='day_15.dat'):
+def get_data(file_name='test.dat'):
     with open(file_name, 'r') as inf:
         raw_data = [line for line in inf.read().split('\n')]
     my_data = []
@@ -25,27 +25,21 @@ def traverse_map(my_map=None, shortest_route=None, local_route=None):
     # on call, if our current route total is more than the shortest
     # found route, do not finish path, just break loop
     if local_route[0] > shortest_route[0]:
-        print('.', end='')
         return shortest_route
 
     # on call, if we've reached the bottom right, this is the end of the route
     # check on the length and compare to the current shortest found
     if x == y and x == box_size-1:
-        if local_route[0] < shortest_route[0]:
-            shortest_route = local_route
-        print()
+        shortest_route = local_route
         show_grid(my_map, local_route, shortest_route[0])
         return shortest_route
 
 
 
     if x+1 < box_size and ([x+1, y] not in local_route):
-        local_copy = []
-        for pairs in local_route:
-            local_copy.append(pairs)
-        local_copy[0] += my_map[y][x+1]
-        local_copy.append([x+1, y])
-        shortest_route = traverse_map(my_map, shortest_route, local_copy)
+        local_route[0] += my_map[y][x+1]
+        local_route.append([x+1, y])
+        shortest_route = traverse_map(my_map, shortest_route, local_route)
     if y+1 < box_size and ([x, y+1] not in local_route):
         local_copy = []
         for pairs in local_route:
