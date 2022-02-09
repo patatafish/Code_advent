@@ -1,0 +1,111 @@
+# file i/o
+with open("day_10.dat") as inf:
+    raw_data = [line for line in inf.read().split("\n")]
+
+# formatting visuals
+class color:
+    PURPLE = '\033[95m'
+    CYAN = '\033[96m'
+    DARKCYAN = '\033[36m'
+    BLUE = '\033[94m'
+    GREEN = '\033[92m'
+    YELLOW = '\033[93m'
+    RED = '\033[91m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+    END = '\033[0m'
+
+
+# define translation dictionary
+my_dict = {'{': 1, '}': 9, '[': 2, ']': 8, '(': 3, ')': 7, '<': 4, '>': 6}
+
+
+def part_one():
+    check_score = 0
+    corrupted_list = []
+    incomplete_list = []
+    for my_line in raw_data:
+        item_list = [*my_line]
+        print(len(item_list), *item_list)
+
+        openers = ['(', '{', '[', '<']
+        closers = [')', '}', ']', '>']
+
+        group_list = []
+        for open_index in range(len(item_list)):
+            if item_list[open_index] in openers:
+                for close_index in range(open_index + 1, len(item_list)):
+                    if item_list[close_index] in closers:
+                        group_list.append(item_list[open_index:close_index+1])
+
+        valid_list = []
+        for lists in group_list:
+            # abandon items that lead with valid open/close
+            if my_dict[lists[0]] + my_dict[lists[1]] == 10:
+                continue
+            ocount = 0
+            ccount = 0
+            for items in lists:
+                if items in openers: ocount += 1
+                elif items in closers: ccount += 1
+            if ocount == ccount:
+                valid_list.append(lists)
+
+        flag = True
+        for lists in valid_list:
+            print(*lists, end=" ")
+            paren = 0
+            brak = 0
+            curl = 0
+            carr = 0
+            for index in range(len(lists)):
+                if lists[index] is '(': paren += 1
+                elif lists[index] is ')': paren -= 1
+                elif lists[index] is '[': brak += 1
+                elif lists[index] is ']': brak -= 1
+                elif lists[index] is '{': curl += 1
+                elif lists[index] is '}': curl -= 1
+                elif lists[index] is '<': carr += 1
+                elif lists[index] is '>': carr -= 1
+            print(paren, brak, curl, carr, end=" ")
+            if paren != 0 or brak != 0 or curl != 0 or carr != 0:
+                print("corrupted, expected", end=" ")
+                if paren > 0: print("( ", end="")
+                if brak > 0: print("[ ", end="")
+                if curl > 0: print("{ ", end="")
+                if carr > 0: print("< ", end="")
+                print("found", end=" ")
+                if paren < 0:
+                    print(")")
+                    check_score += 3
+                if brak < 0:
+                    print("]")
+                    check_score += 57
+                if curl < 0:
+                    print("}")
+                    check_score += 1197
+                if carr < 0:
+                    print(">")
+                    check_score += 25137
+                flag = False
+                break
+            print()
+
+        if flag == False:
+            corrupted_list.append(my_line)
+        else:
+            incomplete_list.append(my_line)
+
+    print("Corrupted:")
+    print(*corrupted_list, sep="\n")
+    print()
+    print("Incomplete:")
+    print(*incomplete_list, sep="\n")
+    print("\n", check_score)
+
+
+
+
+
+
+part_one()
