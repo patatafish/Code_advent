@@ -25,6 +25,7 @@ def traverse_map(my_map=None, shortest_route=None, local_route=None):
     # on call, if our current route total is more than the shortest
     # found route, do not finish path, just break loop
     if local_route[0] > shortest_route[0]:
+        print('.', end='')
         return shortest_route
 
     # on call, if we've reached the bottom right, this is the end of the route
@@ -32,6 +33,7 @@ def traverse_map(my_map=None, shortest_route=None, local_route=None):
     if x == y and x == box_size-1:
         if local_route[0] < shortest_route[0]:
             shortest_route = local_route
+        print()
         show_grid(my_map, local_route, shortest_route[0])
         return shortest_route
 
