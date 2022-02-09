@@ -66,9 +66,6 @@ def traverse_map(my_map=None, shortest_route=None, local_route=None):
         local_copy.append([x, y-1])
         shortest_route = traverse_map(my_map, shortest_route, local_copy)
 
-    if len(local_route) == 210:
-        show_grid(my_map, local_route, shortest_route[0])
-
     return shortest_route
 
 
@@ -95,6 +92,6 @@ if __name__ == "__main__":
 
     data = get_data()
 
-    quickest = traverse_map(data, quickest)
+    quickest = traverse_map(data)
 
     print(quickest)
