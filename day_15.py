@@ -13,56 +13,24 @@ def get_data(file_name='test.dat'):
         my_data.append([int(item) for item in lines])
     return my_data
 
-class Node():
-
-    def __init__(self):
-        # print('creating empty node...')
-        self.name = None
-        self.cost = None
-        self.edges = []
-
-    def build_edge(self, my_x, my_y, max):
-        print('discovering valid edges for', self.name, end = ' ')
-        if my_x > 0:
-            self.edges.append((my_x-1, my_y))
-        if my_y > 0:
-            self.edges.append((my_x, my_y-1))
-        if my_x < max-1:
-            self.edges.append((my_x+1, my_y))
-        if my_y < max-1:
-            self.edges.append((my_x, my_y+1))
-        print('I think', self.edges, 'are valid...')
-
-class Map():
-
-    def __init__(self, my_data=None):
-        if not my_data:
-            print('created an empty map...')
-        else:
-            self.nodes = []
-            self.size = 0
-            print('building map from data...')
-            max = len(my_data)
-            print('building nodes and adjacencies...', end='')
-            for i in range(max):
-                for j in range(max):
-                    print('.', end='')
-                    # create the empty node
-                    new_node = Node()
-                    # name coords
-                    new_node.name = (j, i)
-                    # record cost to enter node
-                    new_node.cost = my_data[i][j]
-                    # establish edges
-                    new_node.build_edge(i, j, max)
-                    self.nodes.append(new_node)
-                    self.size += 1
-            print(' new map with', self.size, 'nodes')
 
 class PQ():
 
-    def __init__(self):
-        self.queue = []
+    def __init__(self, new_map=None):
+        if not new_map:
+            print('cant create empty queue')
+            return None
+        else:
+            self.queue = []
+            self.list = []
+            self.cost = []
+            self.pos = []
+            self.inv = []
+            self.max = len(new_map)
+            for y in range(len(new_map)):
+                for x in range(len(new_map)):
+                    self.list.append((x,y))
+                    self.cost.append(new_map[x][y])
 
     def insert(self, new_coord, new_cost):
         print('adding', new_coord, new_cost, 'to PQ...')
@@ -75,6 +43,35 @@ class PQ():
             print(self.queue[i])
             if i % 11 == 0 and i != 0:
                 print()
+
+    def poll(self):
+        last_index = len(self.queue)-1
+        temp = self.queue[0]
+        self.queue[0] = self.queue[last_index]
+        self.queue[last_index] = temp
+        self.queue.pop(-1)
+        self.sink(0)
+
+    def sink(self, node):
+        print('sinking node', node)
+        if node == len(self.queue)-1:
+            print('at end, exiting')
+            return
+        lc = (2*node)+1
+        rc = (2*node)+2
+
+        if rc >= len(self.queue):
+            rc = None
+            less = lc
+        elif self.queue[lc][1] <= self.queue[rc][1]:
+            less = lc
+        else:
+            less = rc
+        while True:
+            if self.queue[node][1] < self.queue[less][1]:
+                None
+            break
+
 
     def swim(self, node):
         print('swimming at node', node)
@@ -94,18 +91,44 @@ class PQ():
                 continue
             break
 
+def valid_edges(my_coord, max):
+    my_x = my_coord[0]
+    my_y = my_coord[1]
+    neighbor = []
+    if my_x > 0:
+        neighbor.append((my_x-1, my_y))
+    if my_x < max-1:
+        neighbor.append((my_x+1, my_y))
+    if my_y > 0:
+        neighbor.append((my_x, my_y-1))
+    if my_y < max-1:
+        neighbor.append((my_x, my_y+1))
+    return neighbor
+
 
 def dijk(my_map):
     global positive_infinity
     print('entering dijkstra...', end='')
-    vis = [False] * my_map.size
-    prev = [None] * my_map.size
-    dist = [positive_infinity] * my_map.size
+    vis = [False] * len(my_map)**2
+    prev = [None] * len(my_map)**2
+    dist = [positive_infinity] * len(my_map)**2
     dist[0] = 0
-    my_q = PQ()
+    my_q = PQ(my_map)
     my_q.insert((0,0), 0)
-    while my_q:
-        index = my_q.queue.
+    while my_q.queue:
+        ind = my_q.list.index(my_q.queue[0][0])
+        min_val = my_q.cost[ind]
+        vis[ind] = True
+        neighbors = valid_edges(my_q.list[ind], my_q.max)
+        for item in neighbors:
+            item_ind = my_q.list.index(item)
+            item_dist = dist[ind] + min_val
+            if vis[item_ind] is True:
+                continue
+            if item_dist < dist[item_ind]:
+                dist[item_ind] = item_dist
+                my_q.insert(my_q.list[item_ind], my_q.cost[item_ind])
+        my_q.poll()
 
     my_q.print()
 
@@ -117,9 +140,7 @@ def dijk(my_map):
 if __name__ == "__main__":
 
     data = get_data()
-    map = Map(data)
-
-    dijk(map)
+    dijk(data)
 
 
     print('\n\nExiting...')
