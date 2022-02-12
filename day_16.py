@@ -40,34 +40,72 @@ def bin_to_dec(my_bin):
 
     return my_dec
 
+
+def type_4(signal, my_ending_bit):
+    my_literal = ''
+    while True:
+        my_literal += (signal[my_ending_bit+1:my_ending_bit+5])
+        my_ending_bit += 5
+        if signal[my_ending_bit-5] == '1':
+            continue
+        else:
+            return my_literal, my_ending_bit
+
+
+def filter_signal(signal, my_ending_bit):
+    my_ending_bit += 4 - (my_ending_bit % 4)
+    print(signal[my_ending_bit:my_ending_bit+4])
+    while signal[my_ending_bit:my_ending_bit+4] == '0000':
+        my_ending_bit += 4
+    return my_ending_bit
+
+
+
 if __name__ == '__main__':
     signal = read_file()
     print(signal)
     signal = process_signal(signal)
     print(signal)
+    processed_signal = []
     while signal:
-        this_byte = signal[0:4]
+        ending_bit = 6
+        version = bin_to_dec(signal[0:3])
+        packet_type = bin_to_dec(signal[3:6])
+        print(f'Incoming signal: V.{version} T.{packet_type}')
+        if packet_type == 4:
+            literal, ending_bit = type_4(signal, ending_bit)
+            literal = bin_to_dec(literal)
+            processed_signal.append([version, packet_type, literal])
+        else:
+            length_id = signal[ending_bit]
+            ending_bit += 1
+            if length_id is '0':
+                sub_packet_length = bin_to_dec(signal[ending_bit:ending_bit+15])
+                ending_bit += 15
+                target = ending_bit + sub_packet_length
+                processed_signal.append([version, packet_type, f'length: {sub_packet_length} bits'])
+                while ending_bit != target:
+                    sub_packet_version = bin_to_dec(signal[ending_bit:ending_bit+3])
+                    sub_packet_type = bin_to_dec(signal[ending_bit+3:ending_bit+6])
+                    ending_bit += 6
+                    print(f'Sub packet found: V.{sub_packet_version} T.{sub_packet_type}')
+                    literal, ending_bit = type_4(signal, ending_bit)
+                    literal = bin_to_dec(literal)
+                    processed_signal.append([sub_packet_version, sub_packet_type, literal])
+            else:
+                sub_packet_length = bin_to_dec(signal[ending_bit:ending_bit+11])
+                ending_bit += 11
+                processed_signal.append([version, packet_type, f'length: {sub_packet_length} packets'])
+                for i in range(sub_packet_length):
+                    sub_packet_version = bin_to_dec(signal[ending_bit:ending_bit+3])
+                    sub_packet_type = bin_to_dec(signal[ending_bit+3:ending_bit+6])
+                    ending_bit += 6
+                    print(f'Sub packet found: V.{sub_packet_version} T.{sub_packet_type}')
+                    literal, ending_bit = type_4(signal, ending_bit)
+                    literal = bin_to_dec(literal)
+                    processed_signal.append([sub_packet_version, sub_packet_type, literal])
 
-        while True:
-            if len(this_byte) < 4:
-                this_byte += signal[0:4]
-                signal = signal[4:]
+        ending_bit = filter_signal(signal, ending_bit)
+        signal = signal[ending_bit:]
 
-            version = bin_to_dec(signal[0:3])
-
-            type = bin_to_dec(signal[3:6])
-        signal = signal[6:]
-        print(f'Incoming signal: V.{version} T.{type}')
-        if type == 4:
-            literal = []
-            while True:
-                literal.append(signal[1:5])
-                if signal[0] == '1':
-                    signal = signal[5:]
-                    continue
-                else:
-                    signal = signal[5:]
-                    break
-
-        break
 
