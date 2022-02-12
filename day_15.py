@@ -197,7 +197,7 @@ def dijk(my_map):
 
 def grow_data(my_map):
     print('growing data...')
-    factor = 1
+    factor = 4
     row_len = len(my_map[0])
     for row in my_map:
         for i in range(factor):
