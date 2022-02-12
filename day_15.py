@@ -1,11 +1,10 @@
 import math
 import datetime
 # define positive infinity for distances in dijkstra
-import random
-
 positive_infinity = float('inf')
 swim_time = []
 sink_time = []
+
 
 # file i/o
 def get_data(file_name='day_15.dat'):
@@ -13,11 +12,11 @@ def get_data(file_name='day_15.dat'):
         raw_data = [line for line in inf.read().split('\n')]
     my_data = []
     for lines in raw_data:
-        my_data.append([int(item) for item in lines])
+        my_data.append([int(my_item) for my_item in lines])
     return my_data
 
 
-class PQ():
+class PQ:
 
     def __init__(self, new_map=None):
         if not new_map:
@@ -33,7 +32,7 @@ class PQ():
             self.max = len(new_map)
             for y in range(len(new_map)):
                 for x in range(len(new_map)):
-                    self.list.append((x,y))
+                    self.list.append((x, y))
                     self.cost.append(new_map[y][x])
                     self.neighbors.append(valid_edges((x, y), self.max))
                     self.prev.append(-1)
@@ -105,7 +104,6 @@ class PQ():
                 return least
         return least
 
-
     def swim(self, node):
         # print('swimming at node', node, end='... ')
         if node == 0:
@@ -141,21 +139,22 @@ class PQ():
                 print(f'\x1b[6:30:42m{self.cost[i]}', end='')
             else:
                 print(f'\x1b[0m{self.cost[i]}', end='')
-            if i % (self.max) == (self.max - 1):
+            if i % self.max == self.max - 1:
                 print('\x1b[0m')
         print()
 
-def valid_edges(my_coord, max):
+
+def valid_edges(my_coord, my_max):
     my_x = my_coord[0]
     my_y = my_coord[1]
     neighbor = []
     if my_x > 0:
         neighbor.append((my_x-1, my_y))
-    if my_x < max-1:
+    if my_x < my_max-1:
         neighbor.append((my_x+1, my_y))
     if my_y > 0:
         neighbor.append((my_x, my_y-1))
-    if my_y < max-1:
+    if my_y < my_max-1:
         neighbor.append((my_x, my_y+1))
     return neighbor
 
@@ -168,8 +167,9 @@ def dijk(my_map):
     dist = [positive_infinity] * len(my_map)**2
     count = 0
     dist[0] = 0
+    item_ind = 0
     my_q = PQ(my_map)
-    my_q.insert((0,0), 0)
+    my_q.insert((0, 0), 0)
     avg = datetime.datetime.now()
     while my_q.queue:
         ind = my_q.list.index(my_q.queue[0][0])
@@ -186,8 +186,8 @@ def dijk(my_map):
             runtime.append([len(my_q.queue), avg])
             avg = datetime.datetime.now()
         count += 1
-        for item in my_q.neighbors[ind]:
-            item_ind = my_q.list.index(item)
+        for my_item in my_q.neighbors[ind]:
+            item_ind = my_q.list.index(my_item)
             if vis[item_ind] is True:
                 continue
             item_dist = my_q.cost[item_ind] + min_val
@@ -207,48 +207,39 @@ def dijk(my_map):
         print(line)
 
 
-
 def grow_data(my_map):
     print('growing data...')
-
     factor = 2
-
-    # print(my_map)
-    new_map = []
-
     row_len = len(my_map[0])
-
     for row in my_map:
         for i in range(factor):
             temp = row[-row_len:]
-            for item in temp:
-                next = item+1
-                if next > 9:
-                    next = 1
-                row.append(next)
+            for my_item in temp:
+                my_next = my_item+1
+                if my_next > 9:
+                    my_next = 1
+                row.append(my_next)
 
     target = len(my_map)*factor
     count = 0
     while count < target:
         new_row = []
-        for item in my_map[count]:
-            next = item + 1
-            if next > 9:
-                next = 1
-            new_row.append(next)
+        for my_item in my_map[count]:
+            my_next = my_item + 1
+            if my_next > 9:
+                my_next = 1
+            new_row.append(my_next)
         my_map.append(new_row)
         count += 1
 
     return my_map
 
 
-
-
 if __name__ == "__main__":
 
     start_time = datetime.datetime.now()
 
-    print ('starting at', start_time)
+    print('starting at', start_time)
     data = get_data()
 
     # if input('Should I expand the map? y/n?') is 'y':
@@ -262,7 +253,6 @@ if __name__ == "__main__":
     print('finished at', end_time)
     print('total seconds elapsed:', elapsed_time)
 
-
     with open('sink.dat', 'w') as outf:
         for item in sink_time:
             outf.write(f'{item},')
@@ -270,6 +260,5 @@ if __name__ == "__main__":
     with open('swim.dat', 'w') as outf:
         for item in swim_time:
             outf.write(f'{item},')
-
 
     print('\n\nExiting...')
