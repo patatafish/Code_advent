@@ -164,33 +164,21 @@ def dijk(my_map):
     print('entering dijkstra...')
     vis = [False] * len(my_map)**2
     dist = [positive_infinity] * len(my_map)**2
-    count = 0
     dist[0] = 0
     item_ind = 0
     my_q = PQ(my_map)
     my_q.insert((0, 0), 0)
     avg = datetime.datetime.now()
     while my_q.queue:
-        ind = my_q.list.index(my_q.queue[0][0])
-        min_val = dist[ind]
+        ind = my_q.queue[0][0][0] + (my_q.queue[0][0][1] * len(my_map))
         vis[ind] = True
-        if count == 5000:
-            new = datetime.datetime.now()
-            avg = new - avg
-            count = 0
-            my_q.show_route(my_q.list[ind])
-            print('cost to this point:', dist[ind])
-            print('size of PQ:', len(my_q.queue))
-            print('time per 5k:', avg)
-            my_q.show_myself()
-            runtime.append([len(my_q.queue), avg])
-            avg = datetime.datetime.now()
-        count += 1
+        if dist[ind] < my_q.queue[0][1]:
+            continue
         for my_item in my_q.neighbors[ind]:
             item_ind = my_item[0] + (my_item[1] * len(my_map))
             if vis[item_ind] is True:
                 continue
-            item_dist = my_q.cost[item_ind] + min_val
+            item_dist = my_q.cost[item_ind] + dist[ind]
             if item_dist < dist[item_ind]:
                 dist[item_ind] = item_dist
                 my_q.prev[item_ind] = ind
@@ -209,7 +197,7 @@ def dijk(my_map):
 
 def grow_data(my_map):
     print('growing data...')
-    factor = 4
+    factor = 1
     row_len = len(my_map[0])
     for row in my_map:
         for i in range(factor):
