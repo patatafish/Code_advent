@@ -2,9 +2,6 @@ import math
 import datetime
 # define positive infinity for distances in dijkstra
 positive_infinity = float('inf')
-swim_time = []
-sink_time = []
-
 
 # file i/o
 def get_data(file_name='day_15.dat'):
@@ -37,13 +34,18 @@ class PQ:
                     self.neighbors.append(valid_edges((x, y), self.max))
                     self.prev.append(-1)
 
+    def show_myself(self):
+        print('len of queue:', len(self.queue))
+        print('len of list:', len(self.list))
+        print('len of cost:', len(self.cost))
+        print('len of pos:', len(self.pos))
+        print('len of prev:', len(self.prev))
+        print('len of neighbors:', len(self.neighbors))
+
     def insert(self, new_coord, new_cost):
         # print('adding', new_coord, new_cost, 'to PQ...')
         self.queue.append([new_coord, new_cost])
-        global swim_time
-        swim_start = datetime.datetime.now()
         self.swim(len(self.queue)-1)
-        swim_time.append(datetime.datetime.now() - swim_start)
 
     def print(self):
         print('\nThis queue contains:')
@@ -59,10 +61,7 @@ class PQ:
             self.queue[0] = self.queue[last_index]
             self.queue[last_index] = temp
             self.queue.pop(-1)
-            sink_start = datetime.datetime.now()
-            global sink_time
             self.sink(0)
-            sink_time.append(datetime.datetime.now() - sink_start)
         else:
             self.queue.pop()
 
@@ -183,11 +182,12 @@ def dijk(my_map):
             print('cost to this point:', dist[ind])
             print('size of PQ:', len(my_q.queue))
             print('time per 5k:', avg)
+            my_q.show_myself()
             runtime.append([len(my_q.queue), avg])
             avg = datetime.datetime.now()
         count += 1
         for my_item in my_q.neighbors[ind]:
-            item_ind = my_q.list.index(my_item)
+            item_ind = my_item[0] + (my_item[1] * len(my_map))
             if vis[item_ind] is True:
                 continue
             item_dist = my_q.cost[item_ind] + min_val
@@ -209,7 +209,7 @@ def dijk(my_map):
 
 def grow_data(my_map):
     print('growing data...')
-    factor = 2
+    factor = 4
     row_len = len(my_map[0])
     for row in my_map:
         for i in range(factor):
@@ -252,13 +252,5 @@ if __name__ == "__main__":
 
     print('finished at', end_time)
     print('total seconds elapsed:', elapsed_time)
-
-    with open('sink.dat', 'w') as outf:
-        for item in sink_time:
-            outf.write(f'{item},')
-
-    with open('swim.dat', 'w') as outf:
-        for item in swim_time:
-            outf.write(f'{item},')
 
     print('\n\nExiting...')
