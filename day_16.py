@@ -41,15 +41,94 @@ def bin_to_dec(my_bin):
     return my_dec
 
 
-def type_4(signal, my_ending_bit):
-    my_literal = ''
-    while True:
-        my_literal += (signal[my_ending_bit+1:my_ending_bit+5])
-        my_ending_bit += 5
-        if signal[my_ending_bit-5] == '1':
-            continue
+def run_signal(signal, target, clean_signal):
+    print('called run_', target, clean_signal)
+    my_end = target[0]
+    while '1' in signal[my_end:target[1]]:
+        print(target[0], signal[target[0]:target[1]], target[1])
+
+        my_end, my_ver, my_type = get_type(signal, target[0])
+        my_type = bin_to_dec(my_type)
+        my_ver = bin_to_dec(my_ver)
+        if my_type == 4:
+                new_literal = ''
+                while True:
+                    len = signal[my_end]
+                    new_literal += signal[my_end+1:my_end+5]
+                    my_end += 5
+                    if len == '0':
+                        break
+                new_literal = bin_to_dec(new_literal)
+                clean_signal.append([my_ver, my_type, f'val:{new_literal}'])
+                if my_end < target[1]:
+                    clean_signal = run_signal(signal, [my_end, target[1]], clean_signal)
+                    return clean_signal
         else:
-            return my_literal, my_ending_bit
+            len = signal[my_end]
+            my_end += 1
+            if len == '0':
+                sub_len = bin_to_dec(signal[my_end:my_end+15])
+                my_end += 15
+                clean_signal.append([my_ver, my_type, f's_len:{sub_len} bits'])
+                clean_signal = run_signal(signal, [my_end, my_end+sub_len], clean_signal)
+                my_end += sub_len
+                return clean_signal
+            elif len == '1':
+                sub_len = bin_to_dec(signal[my_end:my_end+11])
+                my_end += 11
+                target_length = scan_len(signal, my_end, sub_len)
+                clean_signal.append([my_ver, my_type, f's_len:{target_length} bits'])
+                while sub_len:
+                    clean_signal = run_signal(signal, [my_end, my_end+target_length], clean_signal)
+                    sub_len -= 1
+                my_end += target_length
+                continue
+
+    return clean_signal
+
+def scan_len(signal, my_start, my_number):
+    counted_subs = 0
+    sub_start_index = []
+    my_sub_len = 0 + my_start
+    while counted_subs < my_number:
+        sub_start_index.pop(-1)
+        temp1 = signal[my_start:my_start+6]
+        counted_subs += 1
+        my_type = signal[my_start+3:my_start+6]
+        my_start += 6
+        if my_type == '100':
+            sub_start_index.append(my_start)
+            while True:
+                temp = signal[my_start:my_start+5]
+                index = signal[my_start]
+                if index == '1':
+                    my_start += 5
+                    continue
+                my_start += 5
+                break
+        else:
+                sub_start_index.append(my_start)
+                index = signal[my_start]
+                my_start += 1
+
+                if index == '0':
+                    temp3 = signal[my_start:my_start+15]
+                    my_start += 15
+                    temp3 = bin_to_dec(temp3)
+                    my_start += temp3
+                elif index == '1':
+                    temp4 = bin_to_dec(signal[my_start:my_start+11])
+                    my_start += 11
+                    sub_start_index.append(-1)
+                    target_len = scan_len(signal, my_start, temp4)
+                    my_start += target_len
+
+    return my_start - my_sub_len
+
+def get_type(signal, my_ending_bit):
+    my_version = signal[my_ending_bit:my_ending_bit+3]
+    my_type = signal[my_ending_bit+3:my_ending_bit+6]
+    return my_ending_bit + 6, my_version, my_type
 
 
 def filter_signal(signal, my_ending_bit):
@@ -65,84 +144,11 @@ if __name__ == '__main__':
     print(signal)
     signal = process_signal(signal)
     print(signal)
-    i=0
-    for char in signal:
-        i += 1
-        print(char, end='')
-        if i % 3 == 0:
-            print()
-    processed_signal = []
-    while signal:
-        ending_bit = 6
-        version = bin_to_dec(signal[0:3])
-        packet_type = bin_to_dec(signal[3:6])
-        print(f'Incoming signal: V.{version} T.{packet_type}')
-        if packet_type == 4:
-            literal, ending_bit = type_4(signal, ending_bit)
-            literal = bin_to_dec(literal)
-            processed_signal.append([version, packet_type, literal])
-        else:
-            done = False
-            sub_count = [0]
-            while not done:
-                if packet_type != 4:
-                    length_id = signal[ending_bit]
-                    ending_bit += 1
-                if length_id is '0':
-                    sub_packet_length = bin_to_dec(signal[ending_bit:ending_bit+15])
-                    # sub_count.append(sub_packet_length)
-                    ending_bit += 15
-                    target = ending_bit + sub_packet_length
-                    processed_signal.append([version, packet_type, f'length: {sub_packet_length} bits'])
-                    while ending_bit != target:
-                        sub_packet_version = bin_to_dec(signal[ending_bit:ending_bit+3])
-                        sub_packet_type = bin_to_dec(signal[ending_bit+3:ending_bit+6])
-                        ending_bit += 6
-                        print(f'Sub packet found: V.{sub_packet_version} T.{sub_packet_type}')
-                        if sub_packet_type != 4:
-                            version = sub_packet_version
-                            packet_type = sub_packet_type
-                            sub_count[-1] -= 1
-                            break
-                        literal, ending_bit = type_4(signal, ending_bit)
-                        literal = bin_to_dec(literal)
-                        processed_signal.append([sub_packet_version, sub_packet_type, literal])
-                        # do we need to adjust ending bit if we're sub packet?
-                        # ending_bit = filter_signal(signal, ending_bit)
-                        continue
-                    done = True
-                else:
-                    sub_packet_length = bin_to_dec(signal[ending_bit:ending_bit+11])
-                    sub_count.append(sub_packet_length)
-                    ending_bit += 11
-                    processed_signal.append([version, packet_type, f'length: {sub_packet_length} packets'])
-                    for i in range(sub_packet_length):
-                        sub_packet_version = bin_to_dec(signal[ending_bit:ending_bit+3])
-                        sub_packet_type = bin_to_dec(signal[ending_bit+3:ending_bit+6])
-                        ending_bit += 6
-                        print(f'Sub packet found: V.{sub_packet_version} T.{sub_packet_type}')
-                        if sub_packet_type != 4:
-                            version = sub_packet_version
-                            packet_type = sub_packet_type
-                            break
-                        literal, ending_bit = type_4(signal, ending_bit)
-                        literal = bin_to_dec(literal)
-                        processed_signal.append([sub_packet_version, sub_packet_type, literal])
-                        sub_count[-1] -= 1
-                        # don't adjust ending bit for sub-packets
-                        # ending_bit = filter_signal(signal, ending_bit)
-                        if not sub_count[-1]:
-                            sub_count.pop(-1)
-                            done = True
-                    # i think we need adjustment here,
-                    # but only if we've used type 4 and are "done"
-                    if done:
-                        ending_bit = filter_signal(signal, ending_bit)
+    clean_signal = []
 
-
-        signal = signal[ending_bit:]
+    clean_signal = run_signal(signal, [0, len(signal)], clean_signal)
 
     sum = 0;
-    for item in processed_signal:
+    for item in clean_signal:
         sum += item[0]
     print('Packet Version Sum:', sum)
