@@ -76,8 +76,28 @@ def run_signal(signal, target, clean_signal):
             elif len == '1':
                 sub_len = bin_to_dec(signal[my_end:my_end+11])
                 my_end += 11
-                target_length = scan_len(signal, my_end, sub_len)
-                clean_signal.append([my_ver, my_type, f's_len:{target_length} bits'])
+                clean_signal.append([my_ver, my_type, f's_len:{sub_len} members'])
+                start_index = scan_len(signal, my_end, sub_len)
+                temp_index = []
+                flag = False
+                for item in start_index:
+                    if item == -1:
+                        flag = not flag
+                    if not flag and item != -1:
+                        temp_index.append(item)
+                flag = False
+                start_index.clear()
+                for item in temp_index:
+                    if not flag:
+                        start_index.append(item)
+                    flag = not flag
+
+
+                # YOU HAVE A CLEAN LIST OF WHERE EACH SUB-ELEMENT STARTS NOW
+                # RUN A LOOP HERE TO MOVE INTO EACH AND RECURSIVLY CALL
+                # RUN_SIGNAL FROM THE START OF EACH!
+                # DO YOU NEED TO CLEAN A SECOND TIME? CAN I USE THE END POINTS TOO?
+
                 while sub_len:
                     clean_signal = run_signal(signal, [my_end, my_end+target_length], clean_signal)
                     sub_len -= 1
@@ -86,18 +106,18 @@ def run_signal(signal, target, clean_signal):
 
     return clean_signal
 
-def scan_len(signal, my_start, my_number):
+def scan_len(signal, my_start, my_number, sub_start_index = None):
+    if not sub_start_index:
+        sub_start_index = []
     counted_subs = 0
-    sub_start_index = []
     my_sub_len = 0 + my_start
     while counted_subs < my_number:
-        sub_start_index.pop(-1)
+        sub_start_index.append(my_start)
         temp1 = signal[my_start:my_start+6]
         counted_subs += 1
         my_type = signal[my_start+3:my_start+6]
         my_start += 6
         if my_type == '100':
-            sub_start_index.append(my_start)
             while True:
                 temp = signal[my_start:my_start+5]
                 index = signal[my_start]
@@ -105,9 +125,9 @@ def scan_len(signal, my_start, my_number):
                     my_start += 5
                     continue
                 my_start += 5
+                sub_start_index.append(my_start)
                 break
         else:
-                sub_start_index.append(my_start)
                 index = signal[my_start]
                 my_start += 1
 
@@ -116,14 +136,17 @@ def scan_len(signal, my_start, my_number):
                     my_start += 15
                     temp3 = bin_to_dec(temp3)
                     my_start += temp3
+                    sub_start_index.append(my_start)
                 elif index == '1':
                     temp4 = bin_to_dec(signal[my_start:my_start+11])
                     my_start += 11
+                    sub_start_index.append(my_start)
                     sub_start_index.append(-1)
-                    target_len = scan_len(signal, my_start, temp4)
-                    my_start += target_len
+                    sub_start_index = scan_len(signal, my_start, temp4, sub_start_index)
+                    sub_start_index.append(-1)
+                    my_start = max(sub_start_index)
 
-    return my_start - my_sub_len
+    return sub_start_index
 
 def get_type(signal, my_ending_bit):
     my_version = signal[my_ending_bit:my_ending_bit+3]
