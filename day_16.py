@@ -1,5 +1,5 @@
 # file io
-def read_file(filename='test.dat'):
+def read_file(filename='day_16.dat'):
     with open(filename, 'r') as inf:
         raw_data = [line for line in inf.read()]
     return raw_data
@@ -41,11 +41,15 @@ def bin_to_dec(my_bin):
     return my_dec
 
 
-def run_signal(signal, target, clean_signal):
+def run_signal(signal, target, clean_signal=None):
+    if not clean_signal:
+        clean_signal = []
+        clean_signal.append([0, 0, f'signal is {len(signal)} bits'])
     print('called run_', target, clean_signal)
+    print(target[0], signal[target[0]:target[1]], target[1])
     my_end = target[0]
     while '1' in signal[my_end:target[1]]:
-        print(target[0], signal[target[0]:target[1]], target[1])
+
 
         my_end, my_ver, my_type = get_type(signal, target[0])
         my_type = bin_to_dec(my_type)
@@ -53,10 +57,10 @@ def run_signal(signal, target, clean_signal):
         if my_type == 4:
                 new_literal = ''
                 while True:
-                    len = signal[my_end]
+                    my_len = signal[my_end]
                     new_literal += signal[my_end+1:my_end+5]
                     my_end += 5
-                    if len == '0':
+                    if my_len == '0':
                         break
                 new_literal = bin_to_dec(new_literal)
                 clean_signal.append([my_ver, my_type, f'val:{new_literal}'])
@@ -64,40 +68,41 @@ def run_signal(signal, target, clean_signal):
                     clean_signal = run_signal(signal, [my_end, target[1]], clean_signal)
                     return clean_signal
         else:
-            len = signal[my_end]
+            my_len = signal[my_end]
             my_end += 1
-            if len == '0':
+            if my_len == '0':
                 sub_len = bin_to_dec(signal[my_end:my_end+15])
                 my_end += 15
                 clean_signal.append([my_ver, my_type, f's_len:{sub_len} bits'])
                 clean_signal = run_signal(signal, [my_end, my_end+sub_len], clean_signal)
                 my_end += sub_len
-                return clean_signal
-            elif len == '1':
+                if my_end < target[1]:
+                    clean_signal = run_signal(signal, [my_end, target[1]], clean_signal)
+                    return clean_signal
+            elif my_len == '1':
                 sub_len = bin_to_dec(signal[my_end:my_end+11])
                 my_end += 11
-                target_length = scan_len(signal, my_end, sub_len)
-                clean_signal.append([my_ver, my_type, f's_len:{target_length} bits'])
-                while sub_len:
-                    clean_signal = run_signal(signal, [my_end, my_end+target_length], clean_signal)
-                    sub_len -= 1
-                my_end += target_length
-                continue
+                sub_bit_len = scan_len(signal, my_end, sub_len)
+                # target_length = sub_bit_len - my_end
+                clean_signal.append([my_ver, my_type, f's_len:{sub_len} members ({sub_bit_len} bits)'])
+
+                clean_signal = run_signal(signal, [my_end, my_end+sub_bit_len], clean_signal)
+                my_end += sub_bit_len
+                if my_end < target[1]:
+                    clean_signal = run_signal(signal, [my_end, target[1]], clean_signal)
+                    return clean_signal
 
     return clean_signal
 
 def scan_len(signal, my_start, my_number):
     counted_subs = 0
-    sub_start_index = []
     my_sub_len = 0 + my_start
     while counted_subs < my_number:
-        sub_start_index.pop(-1)
         temp1 = signal[my_start:my_start+6]
         counted_subs += 1
         my_type = signal[my_start+3:my_start+6]
         my_start += 6
         if my_type == '100':
-            sub_start_index.append(my_start)
             while True:
                 temp = signal[my_start:my_start+5]
                 index = signal[my_start]
@@ -107,7 +112,6 @@ def scan_len(signal, my_start, my_number):
                 my_start += 5
                 break
         else:
-                sub_start_index.append(my_start)
                 index = signal[my_start]
                 my_start += 1
 
@@ -119,7 +123,6 @@ def scan_len(signal, my_start, my_number):
                 elif index == '1':
                     temp4 = bin_to_dec(signal[my_start:my_start+11])
                     my_start += 11
-                    sub_start_index.append(-1)
                     target_len = scan_len(signal, my_start, temp4)
                     my_start += target_len
 
@@ -130,23 +133,13 @@ def get_type(signal, my_ending_bit):
     my_type = signal[my_ending_bit+3:my_ending_bit+6]
     return my_ending_bit + 6, my_version, my_type
 
-
-def filter_signal(signal, my_ending_bit):
-    my_ending_bit += 4 - (my_ending_bit % 4)
-    print(signal[my_ending_bit:my_ending_bit+4])
-    while signal[my_ending_bit:my_ending_bit+4] == '0000':
-        my_ending_bit += 4
-    return my_ending_bit
-
-
 if __name__ == '__main__':
     signal = read_file()
     print(signal)
     signal = process_signal(signal)
     print(signal)
-    clean_signal = []
 
-    clean_signal = run_signal(signal, [0, len(signal)], clean_signal)
+    clean_signal = run_signal(signal, [0, len(signal)])
 
     sum = 0;
     for item in clean_signal:
