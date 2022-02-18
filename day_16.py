@@ -63,7 +63,7 @@ def run_signal(signal, target, clean_signal=None):
                     if my_len == '0':
                         break
                 new_literal = bin_to_dec(new_literal)
-                clean_signal.append([my_ver, my_type, f'val:{new_literal}'])
+                clean_signal.append([my_ver, my_type, int(new_literal)])
                 if my_end < target[1]:
                     clean_signal = run_signal(signal, [my_end, target[1]], clean_signal)
                     return clean_signal
@@ -136,7 +136,70 @@ def get_type(signal, my_ending_bit):
 
 def parse_clean(my_clean_signal):
 
-    return my_clean_signal
+    instruction_list = []
+
+    # remove the summary from the head of the list
+    my_clean_signal.pop(0)
+
+    max_len = len(my_clean_signal) - 1
+
+
+    for lines in my_clean_signal:
+        if lines[1] == 0:
+            instruction_list.append('sum')
+        elif lines[1] == 1:
+            instruction_list.append('prod')
+        elif lines[1] == 2:
+            instruction_list.append('min')
+        elif lines[1] == 3:
+            instruction_list.append('max')
+        elif lines[1] == 4:
+            instruction_list.append(lines[2])
+
+    done = False
+    while not done:
+        for i in range(len(instruction_list)):
+            # since we are deleting elements, we check to see if we are oob
+            if i >= len(instruction_list):
+                break
+            if type(instruction_list[i]) is int:
+                literal_end_index = i
+                while type(instruction_list[literal_end_index] is int):
+                    literal_end_index += 1
+                    if literal_end_index == max_len:
+                       break
+                # we have the starting (i) and ending index of the int values now
+
+                # now we look left of the string to see what the operator is
+                if instruction_list[i-1] is 'sum':
+                    # create a clean string to eval later
+                    my_operation = '('
+
+                    for sum_index in range(i, literal_end_index+1):
+                        my_operation += str(instruction_list[sum_index])
+                        if sum_index < literal_end_index:
+                            my_operation += '+'
+
+                    # close the paren
+                    my_operation += ')'
+
+                    # clean the list of the integer values we just processed.
+                    instruction_list[i-1] = my_operation
+                    instruction_list[i:literal_end_index+1] = []
+
+
+                i = 0
+                continue
+
+        print(instruction_list)
+
+        if len(instruction_list) is 1:
+            done = True
+
+
+
+    print(eval(instruction_list[0]))
+
 
 
 
@@ -148,7 +211,7 @@ if __name__ == '__main__':
 
     clean_signal = run_signal(signal, [0, len(signal)])
 
-    clean_signal = parse_clean(clean_signal)
+    parse_clean(clean_signal)
 
     sum = 0;
     for item in clean_signal:
