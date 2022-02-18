@@ -1,5 +1,5 @@
 # file io
-def read_file(filename='day_16.dat'):
+def read_file(filename='test.dat'):
     with open(filename, 'r') as inf:
         raw_data = [line for line in inf.read()]
     return raw_data
@@ -133,6 +133,13 @@ def get_type(signal, my_ending_bit):
     my_type = signal[my_ending_bit+3:my_ending_bit+6]
     return my_ending_bit + 6, my_version, my_type
 
+
+def parse_clean(my_clean_signal):
+
+    return my_clean_signal
+
+
+
 if __name__ == '__main__':
     signal = read_file()
     print(signal)
@@ -140,6 +147,8 @@ if __name__ == '__main__':
     print(signal)
 
     clean_signal = run_signal(signal, [0, len(signal)])
+
+    clean_signal = parse_clean(clean_signal)
 
     sum = 0;
     for item in clean_signal:
