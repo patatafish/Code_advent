@@ -163,11 +163,93 @@ def get_type(signal, my_ending_bit):
     return my_ending_bit + 6, my_version, my_type
 
 
-def parse_clean(my_clean_signal):
+def index_subs(my_clean_signal, parent_index):
+    child_index_list = []
+
+    my_sub_count = my_clean_signal[parent_index][3]
+    current_index = parent_index + 1
+
+    # the next item is always a sub of our current item,
+    # add it to the sub index and count it
+    child_index_list.append(current_index)
+    my_sub_count -= 1
+
+    while my_sub_count:
+
+        # if we are looking at a literal, increase the index and count
+        # straight across the index (don't skip)
+        if my_clean_signal[current_index][1] == 4:
+            current_index += 1
+            child_index_list.append(current_index)
+            my_sub_count -= 1
+            continue
+        # if we are looking at an operator packet, skip the content it has
+        # until we surface out of its sub list
+        # we do this by calling ourselves, and adding the index
+        # of the last item on our own sub list
+        else:
+            skip_list = index_subs(my_clean_signal, current_index)
+            current_index = skip_list[-1] + 1
+            child_index_list.append(current_index)
+            my_sub_count -= 1
+            continue
+
+    return child_index_list
+
+
+def parse_clean(my_clean_signal, instruction_string = '', eval_total = 0):
+
+    if not instruction_string:
+        # remove the summary from the head of the list
+        my_clean_signal.pop(0)
+
+    print(my_clean_signal)
+    print(instruction_string)
+
+    current_type = my_clean_signal[0][1]
+    current_sub_count = my_clean_signal[0][3]
+
+    for i in range(len(my_clean_signal)):
+        if len(my_clean_signal[i]) == 4:
+            my_clean_signal[i][3] = index_subs(my_clean_signal, i)
+
+    print(my_clean_signal)
+
+    do_me = [my_clean_signal[0]]
+
+    output = []
+
+    while do_me:
+        print(do_me)
+        if len(do_me[-1]) == 4 :
+            for subs in do_me[-1][3]:
+                do_me.append(my_clean_signal[subs])
+            continue
+
+        last_instruction = len(do_me) - 1
+
+        # back up to the last operator packet in our list of literals
+        while len(do_me[last_instruction]) == 3:
+            last_instruction -= 1
+
+        # perform the operation and put answer in output
+        my_operator = do_me[last_instruction][1]
+        if my_operator == 0:
+            this_sum = 0
+            for i in range(last_instruction+1, len(do_me)):
+                this_sum += do_me[i][2]
+            do_me = do_me[:last_instruction]
+            output.append(this_sum)
+            continue
+
+
+        # you need to create parallel lists here.
+        # keep the literal values in each and process them
+        # puch the stack the same but with consolodated values
+        # at index of operator packet instead of in a total int
 
 
 
-    print(eval(instruction_list[0]))
 
 
 
