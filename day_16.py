@@ -73,7 +73,8 @@ def run_signal(signal, target, clean_signal=None):
             if my_len == '0':
                 sub_len = bin_to_dec(signal[my_end:my_end+15])
                 my_end += 15
-                clean_signal.append([my_ver, my_type, f's_len:{sub_len} bits'])
+                my_sub_count = scan_count(signal[my_end:my_end+sub_len])
+                clean_signal.append([my_ver, my_type, sub_len, my_sub_count])
                 clean_signal = run_signal(signal, [my_end, my_end+sub_len], clean_signal)
                 my_end += sub_len
                 if my_end < target[1]:
@@ -84,7 +85,7 @@ def run_signal(signal, target, clean_signal=None):
                 my_end += 11
                 sub_bit_len = scan_len(signal, my_end, sub_len)
                 # target_length = sub_bit_len - my_end
-                clean_signal.append([my_ver, my_type, f's_len:{sub_len} members ({sub_bit_len} bits)'])
+                clean_signal.append([my_ver, my_type, sub_bit_len, sub_len])
 
                 clean_signal = run_signal(signal, [my_end, my_end+sub_bit_len], clean_signal)
                 my_end += sub_bit_len
@@ -93,6 +94,34 @@ def run_signal(signal, target, clean_signal=None):
                     return clean_signal
 
     return clean_signal
+
+def scan_count(my_signal):
+    member_count = 0
+    print('counting members of ', my_signal)
+
+    while my_signal:
+        member_count += 1
+        this_type = bin_to_dec(my_signal[3:6])
+        if this_type == 4:
+            my_end = 11
+            while my_signal[my_end-5] is '1':
+                my_end += 4
+
+            my_signal = my_signal[my_end:]
+        else:
+            this_len = my_signal[6]
+            if this_len is '1':
+                member_number = my_signal[7:18]
+                member_number = bin_to_dec(member_number)
+                # member_count += member_number
+                my_signal = my_signal[18+scan_len(my_signal, 18, member_number):]
+            else:
+                my_sub_len = bin_to_dec(my_signal[7:22])
+                # member_count += scan_count(my_signal[22:22+my_sub_len])
+                my_signal = my_signal[22+my_sub_len:]
+
+
+    return member_count
 
 def scan_len(signal, my_start, my_number):
     counted_subs = 0
@@ -136,66 +165,6 @@ def get_type(signal, my_ending_bit):
 
 def parse_clean(my_clean_signal):
 
-    instruction_list = []
-
-    # remove the summary from the head of the list
-    my_clean_signal.pop(0)
-
-    max_len = len(my_clean_signal) - 1
-
-
-    for lines in my_clean_signal:
-        if lines[1] == 0:
-            instruction_list.append('sum')
-        elif lines[1] == 1:
-            instruction_list.append('prod')
-        elif lines[1] == 2:
-            instruction_list.append('min')
-        elif lines[1] == 3:
-            instruction_list.append('max')
-        elif lines[1] == 4:
-            instruction_list.append(lines[2])
-
-    done = False
-    while not done:
-        for i in range(len(instruction_list)):
-            # since we are deleting elements, we check to see if we are oob
-            if i >= len(instruction_list):
-                break
-            if type(instruction_list[i]) is int:
-                literal_end_index = i
-                while type(instruction_list[literal_end_index] is int):
-                    literal_end_index += 1
-                    if literal_end_index == max_len:
-                       break
-                # we have the starting (i) and ending index of the int values now
-
-                # now we look left of the string to see what the operator is
-                if instruction_list[i-1] is 'sum':
-                    # create a clean string to eval later
-                    my_operation = '('
-
-                    for sum_index in range(i, literal_end_index+1):
-                        my_operation += str(instruction_list[sum_index])
-                        if sum_index < literal_end_index:
-                            my_operation += '+'
-
-                    # close the paren
-                    my_operation += ')'
-
-                    # clean the list of the integer values we just processed.
-                    instruction_list[i-1] = my_operation
-                    instruction_list[i:literal_end_index+1] = []
-
-
-                i = 0
-                continue
-
-        print(instruction_list)
-
-        if len(instruction_list) is 1:
-            done = True
-
 
 
     print(eval(instruction_list[0]))
@@ -210,6 +179,7 @@ if __name__ == '__main__':
     print(signal)
 
     clean_signal = run_signal(signal, [0, len(signal)])
+    print(clean_signal)
 
     parse_clean(clean_signal)
 
