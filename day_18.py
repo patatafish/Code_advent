@@ -89,6 +89,7 @@ def reduced(my_string):
         print('Trying to reduce:')
         error_check = 0
         error_list = []
+        deepest_level = 0
         for item in string_list:
             if item is '[':
                 error_check += 1
@@ -98,6 +99,8 @@ def reduced(my_string):
                 error_check -= 1
             else:
                 error_list.append(' ')
+            if error_check > deepest_level:
+                deepest_level = error_check
             print(item, end='')
         print()
         for item in error_list:
@@ -116,22 +119,16 @@ def reduced(my_string):
                 level -= 1
 
             # if we are at 5 opening brackets we are in level 4, and need to explode
-            if level == 5:
-                print(f'Found item to explode...')
-                if type(string_list[i+1]) is int and string_list[i+1] >= 10:
-                    print('Found out the following item needs split')
-                    string_list = go_split(string_list, i+1)
-                    reduced_flag = True
-                    break
+            if level == deepest_level and level > 4:
+                # print(f'Found item to explode...')
                 string_list = explode(string_list, i)
                 # set the reduced flag to repeat while(True) loop from the top
                 reduced_flag = True
                 # break the for char loop and repeat from the top
                 break
 
-
-            if type(string_list[i]) is int and string_list[i] >= 10:
-                print('Found item to split')
+            if type(string_list[i]) is int and string_list[i] >= 10 and deepest_level < 5:
+                # print('Found item to split')
                 string_list = go_split(string_list, i)
                 reduced_flag = True
                 break
@@ -165,7 +162,7 @@ def go_split(string_list, index):
     :return:
         list of strings after reduction
     """
-    print(string_list[index], '->', end='')
+    # print(string_list[index], '->', end='')
     # split the int value to two ints, rounding down on the first item
     left_value = int(string_list[index] / 2)
     right_value = string_list[index] - left_value
@@ -174,7 +171,7 @@ def go_split(string_list, index):
     left_list = string_list[:index]
     right_list = string_list[index + 1:]
     insert_list = ['[', left_value, ',', right_value, ']']
-    print(insert_list)
+    # print(insert_list)
 
     string_list = left_list
     for i in insert_list:
@@ -195,11 +192,11 @@ def explode(string_list, index):
     :return:
         list of strings after reduction
     """
-    print(f'Exploding at index {index}...')
+    # print(f'Exploding at index {index}...')
     while string_list[index+1] is '[':
-        print('Oops, found sub-item, moving to split that one!')
+        # print('Oops, found sub-item, moving to split that one!')
         index += 1
-    print(f'I think I am looking at {string_list[index:index+5]}')
+    # print(f'I think I am looking at {string_list[index:index+5]}')
     end_pair_index = index + 4
     # get the initial values in our pair for later addition
     left_int = string_list[index+1]
@@ -212,7 +209,7 @@ def explode(string_list, index):
     while i > 0:
         i -= 1
         if type(string_list[i]) is int:
-            print(f'found {string_list[i]} to the left...')
+            # print(f'found {string_list[i]} to the left...')
             explode_left = i
             break
     # start at right bracket, look right (+1 index) for the neighbor int
@@ -220,7 +217,7 @@ def explode(string_list, index):
     while i < len(string_list)-1:
         i += 1
         if type(string_list[i]) is int:
-            print(f'found {string_list[i]} to the right...')
+            # print(f'found {string_list[i]} to the right...')
             explode_right = i
             break
 
