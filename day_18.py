@@ -4,7 +4,7 @@ def read_data(my_file='test.dat'):
     """
     read_data() opens a file and returns an array of strings for each line in the file
     :param my_file: string, file name to read, default value is given in params
-    :return: [str1, str2, str3.... strx]
+    :return: [str1, str2, str3.... str x]
     """
     with open(my_file, 'r') as inf:
         raw_data = [line.strip() for line in inf.readlines()]
@@ -14,7 +14,7 @@ def read_data(my_file='test.dat'):
 def solve(my_homework):
     """
     solve() loops line by line through numbers to eval
-    :param my_homework:  [str1, str2, str3... strx]
+    :param my_homework:  [str1, str2, str3... str x]
         list of strings that have the snail fish numbers nested
     :return:
         None
@@ -42,8 +42,28 @@ def solve(my_homework):
         # if there were no more lines, exit the loop
         else:
             break
+    # show the final reduced form
     print(my_homework[0])
 
+    # call the function to check magnitude of final number
+    # we are passing the untangled string as a list of items
+    # so we can perform operations easier in recursion
+    find_magnitude(untangle(my_homework[0]))
+
+
+def find_magnitude(my_string, current_index=0):
+    my_final_sum = 0
+    # look at our current index,
+    # check if there is a sub-bracket in left item
+    # if there is, call ourselves with the sub
+    # if not, times by 3
+    # check if there is sub-bracket in right item
+    # if there is, call ourselves with the sub
+    # if not, times by 2
+    # add the two items from multiplications
+    # return the result of the addition
+
+    return my_final_sum
 
 def untangle(my_string):
     """
@@ -66,7 +86,6 @@ def untangle(my_string):
         untangled_string_list.append(temp_string)
 
     return untangled_string_list
-
 
 
 def reduced(my_string):
@@ -132,8 +151,6 @@ def reduced(my_string):
                 string_list = go_split(string_list, i)
                 reduced_flag = True
                 break
-
-
 
         # if we've moved across the string and haven't reduced at all,
         # we are done with the larger loop, break while(True)
@@ -209,7 +226,6 @@ def explode(string_list, index):
     while i > 0:
         i -= 1
         if type(string_list[i]) is int:
-            # print(f'found {string_list[i]} to the left...')
             explode_left = i
             break
     # start at right bracket, look right (+1 index) for the neighbor int
@@ -217,7 +233,6 @@ def explode(string_list, index):
     while i < len(string_list)-1:
         i += 1
         if type(string_list[i]) is int:
-            # print(f'found {string_list[i]} to the right...')
             explode_right = i
             break
 
@@ -232,6 +247,7 @@ def explode(string_list, index):
     del string_list[index + 1: end_pair_index + 1]
 
     return string_list
+
 
 if __name__ == '__main__':
 
