@@ -1,3 +1,4 @@
+biggest = 0
 
 # file i/o
 def read_data(my_file='day_18.dat'):
@@ -23,12 +24,12 @@ def solve(my_homework):
     # we are only ever working on the first line (index 0)
     while my_homework:
         # for the line we are looking at start by reducing across left to right
-        print(f'Evaluating {my_homework[0]}...')
+        # print(f'Evaluating {my_homework[0]}...')
         my_homework[0] = reduced(my_homework[0])
         # once a line is reduced, check to see if there is another line below
         # if there is a line below append it to the first line and then remove it
         if len(my_homework) > 1:
-            print(f'\x1b[0:30:44mFound new line, adding {my_homework[0]} + {my_homework[1]}\x1b[0m')
+            # print(f'\x1b[0:30:44mFound new line, adding {my_homework[0]} + {my_homework[1]}\x1b[0m')
             temp_string = ''
             temp_string += '['
             temp_string += my_homework[0]
@@ -52,6 +53,7 @@ def solve(my_homework):
 
 
 def find_magnitude(my_string):
+    global biggest
 
     while len(my_string) > 1:
         current_index = 0
@@ -62,9 +64,13 @@ def find_magnitude(my_string):
         my_value = (my_string[current_index] * 3) + (my_string[current_index+2] * 2)
         my_string[current_index-1] = my_value
         del my_string[current_index:current_index+4]
-        for i in my_string:
-            print(i, end='')
-        print()
+        # for i in my_string:
+            # print(i, end='')
+        # print()
+
+    if my_string[0] > biggest:
+        biggest = my_string[0]
+        print(f'New biggest valaue: {biggest}')
 
 def untangle(my_string):
     """
@@ -106,7 +112,7 @@ def reduced(my_string):
     # start a while true loop so we can start back at index 0 while reducing
     # we do this so we can reduce more than one item in our string
     while True:
-        print('Trying to reduce:')
+        # print('Trying to reduce:')
         error_check = 0
         error_list = []
         deepest_level = 0
@@ -121,11 +127,11 @@ def reduced(my_string):
                 error_list.append(' ')
             if error_check > deepest_level:
                 deepest_level = error_check
-            print(item, end='')
-        print()
-        for item in error_list:
-            print(item, end='')
-        print()
+            # print(item, end='')
+        # print()
+        # for item in error_list:
+            # print(item, end='')
+        # print()
         # flag for exit while loop
         reduced_flag = False
         # variable to track how deep in sub-numbers we are, this is for checking
@@ -165,7 +171,7 @@ def reduced(my_string):
         except TypeError:
             reduced_string += str(i)
 
-    print(f'\x1b[0;30;41mFinal reduction is {reduced_string}\x1b[0m')
+    # print(f'\x1b[0;30;41mFinal reduction is {reduced_string}\x1b[0m')
 
     return reduced_string
 
@@ -251,9 +257,21 @@ def explode(string_list, index):
 
 
 if __name__ == '__main__':
-
     homework = read_data()
 
     solve(homework)
+
+    homework = read_data()
+
+    biggest = 0
+    for i in range(len(homework)):
+        for j in range(len(homework)):
+            if i != j:
+                temp_homework = []
+                temp_homework.append(homework[i])
+                temp_homework.append((homework[j]))
+                solve(temp_homework)
+
+    print(f'Final biggest value: {biggest}')
 
     print('\r\r\rexiting...')
