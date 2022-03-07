@@ -1,5 +1,6 @@
 biggest = 0
 
+
 # file i/o
 def read_data(my_file='day_18.dat'):
     """
@@ -70,7 +71,8 @@ def find_magnitude(my_string):
 
     if my_string[0] > biggest:
         biggest = my_string[0]
-        print(f'New biggest valaue: {biggest}')
+        print(f'New biggest value: {biggest}')
+
 
 def untangle(my_string):
     """
@@ -267,9 +269,7 @@ if __name__ == '__main__':
     for i in range(len(homework)):
         for j in range(len(homework)):
             if i != j:
-                temp_homework = []
-                temp_homework.append(homework[i])
-                temp_homework.append((homework[j]))
+                temp_homework = [homework[i], homework[j]]
                 solve(temp_homework)
 
     print(f'Final biggest value: {biggest}')
