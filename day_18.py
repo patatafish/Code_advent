@@ -1,6 +1,6 @@
 
 # file i/o
-def read_data(my_file='test.dat'):
+def read_data(my_file='day_18.dat'):
     """
     read_data() opens a file and returns an array of strings for each line in the file
     :param my_file: string, file name to read, default value is given in params
@@ -51,19 +51,20 @@ def solve(my_homework):
     find_magnitude(untangle(my_homework[0]))
 
 
-def find_magnitude(my_string, current_index=0):
-    my_final_sum = 0
-    # look at our current index,
-    # check if there is a sub-bracket in left item
-    # if there is, call ourselves with the sub
-    # if not, times by 3
-    # check if there is sub-bracket in right item
-    # if there is, call ourselves with the sub
-    # if not, times by 2
-    # add the two items from multiplications
-    # return the result of the addition
+def find_magnitude(my_string):
 
-    return my_final_sum
+    while len(my_string) > 1:
+        current_index = 0
+        # move across the numbers to find the first 'int , int' in a row
+        while type(my_string[current_index]) is not int or type(my_string[current_index+2]) is not int:
+            current_index += 1
+        # our current index is the first of a non-nested pair, resolve the value of that pair and
+        my_value = (my_string[current_index] * 3) + (my_string[current_index+2] * 2)
+        my_string[current_index-1] = my_value
+        del my_string[current_index:current_index+4]
+        for i in my_string:
+            print(i, end='')
+        print()
 
 def untangle(my_string):
     """
