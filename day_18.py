@@ -44,7 +44,7 @@ def solve(my_homework):
         else:
             break
     # show the final reduced form
-    print(my_homework[0])
+    # print(my_homework[0])
 
     # call the function to check magnitude of final number
     # we are passing the untangled string as a list of items
