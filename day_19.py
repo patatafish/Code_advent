@@ -51,19 +51,19 @@ class Root(tk.Tk):
         self.init_compass()                 # call to initiate empty compass
 
 
-        time.sleep(1)
+        time.sleep(5)
         # test rotation
         while True:
-            for i in range(0, random.randint(0, 360), 1):
-                time.sleep(.1)
+            for i in range(0, random.randint(0, 150), 1):
+                # time.sleep(.1)
                 self.x_orient += 1
                 self.draw_compass()
-            for i in range(0, random.randint(0, 360), 1):
-                time.sleep(.1)
+            for i in range(0, random.randint(0, 150), 1):
+                # time.sleep(.1)
                 self.y_orient += 1
                 self.draw_compass()
-            for i in range(0, random.randint(0, 360), 1):
-                time.sleep(.1)
+            for i in range(0, random.randint(0, 150), 1):
+                # time.sleep(.1)
                 self.z_orient += 1
                 self.draw_compass()
 
@@ -99,7 +99,7 @@ class Root(tk.Tk):
         end_z = [0, 0, 90]
         origin = [0, 0, 0]
         point_list = [origin, end_x, end_y, end_z]
-        edge_list = [end_x, end_y, end_z]
+        edge_list = [origin, end_x, end_y, end_z]
 
         # print(f'{self.x_orient},{self.y_orient},{self.z_orient}:::{end_x},{end_y},{end_z}')
 
@@ -127,15 +127,50 @@ class Root(tk.Tk):
 
         # create the depth-organized list for 3d-render
         # copy point list so we don't alter OG list
-        ddd_render_list = copy(point_list)
+        ddd_render_list = point_list[:]
+        # sort the list from furthest pt to closest (lowest z to highest)
+        ddd_render_list.sort(key=lambda item: item[2])
+        # find the origin point, this anchors all three triangles
+        anchor_index = ddd_render_list.index(origin)
+        # build list of triangle vertices for draw
+        if anchor_index == 0:
+            vertex_list = [[0, 1, 2], [0, 1, 3], [0, 2, 3]]
+        elif anchor_index == 1:
+            vertex_list = [[0, 1, 2], [0, 1, 3], [1, 2, 3]]
+        elif anchor_index == 2:
+            vertex_list = [[0, 1, 2], [0, 2, 3], [1, 2, 3]]
+        else:
+            vertex_list = [[0, 1, 3], [0, 2, 3], [1, 2, 3]]
+        # print(f'3d: {ddd_render_list}, o at {anchor_index}')
+        # draw triangles
+        for triangle in vertex_list:
+            corner_a = ddd_render_list[triangle[0]]
+            corner_b = ddd_render_list[triangle[1]]
+            corner_c = ddd_render_list[triangle[2]]
+            this_triangle = [corner_a, corner_b, corner_c]
+            # find color to use
+            # z-x : blue
+            # x-y : red
+            # y-z :yellow
+            if end_z in this_triangle and end_x in this_triangle:
+                color = 'light green'
+            elif end_x in this_triangle and end_y in this_triangle:
+                color = 'light blue'
+            else:
+                color = 'yellow'
+            self.cv_compass_art.create_polygon(corner_a[0], corner_a[1],
+                                               corner_b[0], corner_b[1],
+                                               corner_c[0], corner_c[1],
+                                               outline='black', width=3, fill=color)
 
 
-
-        # draw lines for compass
-        for this_edge in edge_list:
-            self.cv_compass_art.create_line(origin[0], origin[1],
-                                            this_edge[0], this_edge[1],
-                                            width=2, fill='light green')
+        # draw lines for compass 'see through' effect
+        for from_edge in edge_list:
+            for to_edge in edge_list:
+                self.cv_compass_art.create_line(from_edge[0], from_edge[1],
+                                                to_edge[0], to_edge[1],
+                                                width=1, fill='black',
+                                                dash=(4, 2))
 
         # draw end points for compass
         for this_node in point_list:
