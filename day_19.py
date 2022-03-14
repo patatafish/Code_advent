@@ -1,7 +1,7 @@
 import tkinter as tk
-import math
 import time
 import random
+from ddd_trig_rotations import *
 
 
 class Root(tk.Tk):
@@ -94,23 +94,32 @@ class Root(tk.Tk):
 
         # define end points for our three compass lines
         end_x = [90, 0, 0]
+        label_x = [100, 0, 0]
         end_y = [0, -90, 0]
+        label_y = [0, -100, 0]
         end_z = [0, 0, 90]
+        label_z = [0, 0, 100]
         origin = [0, 0, 0]
+        label_o = [0, 0, 0]
         # define lists to manipulate as we rotate compass
         point_list = [origin, end_x, end_y, end_z]
+        label_list = [label_o, label_x, label_y, label_z]
         edge_list = [origin, end_x, end_y, end_z]
 
         # call all three functions for rotation maths, this uses the
         # params self.__orient from the parent definition
         point_list = rotate_around_z(self.x_orient, point_list)
+        label_list = rotate_around_z(self.x_orient, label_list)
         point_list = rotate_around_x(self.y_orient, point_list)
+        label_list = rotate_around_x(self.y_orient, label_list)
         point_list = rotate_around_y(self.z_orient, point_list)
+        label_list = rotate_around_y(self.z_orient, label_list)
 
         # move the points to the center of our canvas
         for i in range(len(point_list)):
             for j in range(2):
                 point_list[i][j] += self.compass_center_px
+                label_list[i][j] += self.compass_center_px
 
         # clear previous contents of frame
         self.cv_compass_art.delete('all')
@@ -169,114 +178,23 @@ class Root(tk.Tk):
 
         # draw end points for compass
         # determine which label we are drawing
-        for this_node in point_list:
-            if this_node is end_x:
+        for i in range(4):
+            # note the coordinates for the label from label_list and label_ pair
+            this_node = label_list[i]
+            if point_list[i] is end_x:
                 label = 'x'
-            elif this_node is end_y:
+            elif point_list[i] is end_y:
                 label = 'y'
-            elif this_node is end_z:
+            elif point_list[i] is end_z:
                 label = 'z'
             else:
                 # no label for origin point
                 label = ''
             # we push the coordinates out from the triangle for readability
-            # this is the top layer and the last use of this_node,
-            # so we can change it freely without later consequence
-            # we need to determine what quadrant the coordinates are in to add or subtract
-            if this_node[0] >= origin[0] and this_node[1] >= origin[1]:
-                this_node[0] += 5
-                this_node[1] += 5
-            elif this_node[0] >= origin[0] and this_node[1] < origin[1]:
-                this_node[0] += 5
-                this_node[1] -= 5
-            elif this_node[0] < origin[0] and this_node[1] >= origin[1]:
-                this_node[0] -= 5
-                this_node[1] += 5
-            else:
-                this_node[0] -= 5
-                this_node[1] -= 5
             self.cv_compass_art.create_text(this_node[0], this_node[1], text=label, fill='black')
 
-        # move the points back to 0,0,0 origin,
-        # so we can perform maths later
-        for i in range(len(point_list)):
-            for j in range(2):
-                point_list[i][j] -= self.compass_center_px
         # refresh canvas with new image
         self.cv_compass_art.update()
-
-
-def rotate_around_x(y_angle, point_list):
-    """
-    rotate_around_x() performs trig to move points in 3d space
-    :param y_angle: measure in degrees of the y angle from 0 deg
-    :param point_list: a list of [x, y, z] coordinates to manipulate
-    :return: the manipulated list of coordinates
-    """
-    if y_angle == 0:
-        return point_list
-
-    sin_theta = math.sin(math.radians(y_angle))
-    cos_theta = math.cos(math.radians(y_angle))
-
-    # loop through the list of points
-    # we start this loop at index 1, not index 0,
-    # so we never rotate the origin point
-    for i in range(1, len(point_list)):
-        this_z = point_list[i][2]
-        this_y = point_list[i][1]
-        point_list[i][1] = round((this_y * cos_theta) - (this_z * sin_theta))
-        point_list[i][2] = round((this_z * cos_theta) + (this_y * sin_theta))
-    return point_list
-
-
-def rotate_around_y(z_angle, point_list):
-    """
-    rotate_around_y() performs trig to move points in 3d space
-    :param z_angle: measure in degrees of the y angle from 0 deg
-    :param point_list: a list of [x, y, z] coordinates to manipulate
-    :return: the manipulated list of coordinates
-    """
-    if z_angle == 0:
-        return point_list
-
-    sin_theta = math.sin(math.radians(z_angle))
-    cos_theta = math.cos(math.radians(z_angle))
-
-    # loop through the list of points
-    # we start this loop at index 1, not index 0,
-    # so we never rotate the origin point
-    for i in range(1, len(point_list)):
-        this_z = point_list[i][2]
-        this_x = point_list[i][0]
-        point_list[i][0] = round((this_x * cos_theta) - (this_z * sin_theta))
-        point_list[i][2] = round((this_z * cos_theta) + (this_x * sin_theta))
-    return point_list
-
-
-def rotate_around_z(x_angle, point_list):
-    """
-    rotate_around_z() performs trig to move points in 3d space
-    :param x_angle: measure in degrees of the y angle from 0 deg
-    :param point_list: a list of [x, y, z] coordinates to manipulate
-    :return: the manipulated list of coordinates
-    """
-    if x_angle == 0:
-        return point_list
-
-    sin_theta = math.sin(math.radians(x_angle))
-    cos_theta = math.cos(math.radians(x_angle))
-
-    # loop through the list of points
-    # we start this loop at index 1, not index 0,
-    # so we never rotate the origin point
-    for i in range(1, len(point_list)):
-        this_x = point_list[i][0]
-        this_y = point_list[i][1]
-        point_list[i][0] = round((this_x * cos_theta) - (this_y * sin_theta))
-        point_list[i][1] = round((this_y * cos_theta) + (this_x * sin_theta))
-
-    return point_list
 
 
 if __name__ == '__main__':
