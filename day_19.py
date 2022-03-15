@@ -23,6 +23,13 @@ class Root(tk.Tk):
         """
         super().__init__()
         self.resizable(False, False)
+        # bind mouse motion to the window
+        self.mouse_move_flag = False
+        # initiate variables to track mouse movement over time
+        self.prev_x, self.prev_y = None, None
+        self.bind('<Motion>', self.mouse_move)
+        self.bind('<Button-1>', self.mouse_move_start)
+        self.bind('<ButtonRelease-1>', self.mouse_move_stop)
         # base frame for background
         self.fr_background = tk.Frame(self, bg='gray', border=0, height=1200, width=1800)
         self.fr_background.pack()
@@ -51,21 +58,36 @@ class Root(tk.Tk):
         self.cv_compass_art = None          # define canvas for compass
         self.init_compass()                 # call to initiate empty compass
 
-        time.sleep(5)
-        # test rotation
-        while True:
-            for i in range(0, random.randint(0, 150), 1):
-                # time.sleep(.1)
-                self.x_orient += 1
-                self.draw_compass()
-            for i in range(0, random.randint(0, 150), 1):
-                # time.sleep(.1)
-                self.y_orient += 1
-                self.draw_compass()
-            for i in range(0, random.randint(0, 150), 1):
-                # time.sleep(.1)
-                self.z_orient += 1
-                self.draw_compass()
+
+
+
+    def mouse_move_start(self, event):
+        self.mouse_move_flag = True
+        self.prev_x = event.x
+        self.prev_y = event.y
+
+    def mouse_move(self, event):
+        self.unbind('<Motion>')
+        if self.mouse_move_flag is True:
+            x, y = event.x, event.y
+            if x > self.prev_x:
+                self.z_orient -= 2
+            elif x < self.prev_x:
+                self.z_orient += 2
+            if y > self.prev_y:
+                self.y_orient -= 2
+                self.x_orient += 2
+            elif y < self.prev_y:
+                self.y_orient += 2
+                self.x_orient -= 2
+
+            self.prev_x, self.prev_y = x, y
+            self.draw_compass()
+        self.bind('<Motion>', self.mouse_move)
+
+    def mouse_move_stop(self, event):
+        self.mouse_move_flag = False
+
 
     def init_compass(self):
         # define the size of the canvas, and find center mass
